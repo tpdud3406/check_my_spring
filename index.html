@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>예매 확인</title>
+<style>
+  :root {
+    --bg: #f4f2ef;
+    --card-bg: #ffffff;
+    --text: #1f1f1f;
+    --muted: #6b6b6b;
+    --border: #e2ddd6;
+    --accent: #2f6f4f;
+    --accent-text: #ffffff;
+    --error: #b3261e;
+    --success-bg: #eaf6ee;
+    --success-text: #1e6b3e;
+    --fail-bg: #fbeceb;
+    --fail-text: #a4231c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 6px;
+    text-align: center;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    margin: 0 0 28px;
+    line-height: 1.5;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    background: #fafafa;
+    color: var(--text);
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #fff;
+  }
+  button {
+    width: 100%;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-text);
+    cursor: pointer;
+  }
+  button:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  .field-error {
+    font-size: 12px;
+    color: var(--error);
+    margin: -10px 0 14px;
+    min-height: 14px;
+  }
+  .result {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: center;
+    display: none;
+  }
+  .result.show { display: block; }
+  .result.success { background: var(--success-bg); color: var(--success-text); }
+  .result.fail { background: var(--fail-bg); color: var(--fail-text); }
+  .result.error { background: var(--fail-bg); color: var(--fail-text); }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>예매 확인</h1>
+  <p class="subtitle">신청서에 입력하신 이름과 휴대폰 번호로<br>예매 접수 여부를 확인할 수 있어요.</p>
+
+  <form id="checkForm">
+    <label for="nameInput">이름</label>
+    <input id="nameInput" type="text" placeholder="예: 홍길동" autocomplete="name" />
+    <div class="field-error" id="nameError"></div>
+
+    <label for="phoneInput">휴대폰 번호 (11자리, - 없이)</label>
+    <input id="phoneInput" type="tel" inputmode="numeric" placeholder="01012341234" autocomplete="tel" maxlength="11" />
+    <div class="field-error" id="phoneError"></div>
+
+    <button type="submit" id="submitBtn">확인하기</button>
+  </form>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+  // Google Apps Script 웹 앱 배포 후 발급되는 URL로 교체하세요.
+  // 예: https://script.google.com/macros/s/AKfycb.../exec
+  const API_URL = "PUT_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+  const form = document.getElementById('checkForm');
+  const nameInput = document.getElementById('nameInput');
+  const phoneInput = document.getElementById('phoneInput');
+  const nameError = document.getElementById('nameError');
+  const phoneError = document.getElementById('phoneError');
+  const submitBtn = document.getElementById('submitBtn');
+  const resultBox = document.getElementById('result');
+
+  phoneInput.addEventListener('input', () => {
+    phoneInput.value = phoneInput.value.replace(/[^0-9]/g, '').slice(0, 11);
+  });
+
+  function showResult(type, message) {
+    resultBox.className = 'result show ' + type;
+    resultBox.textContent = message;
+  }
+
+  function hideResult() {
+    resultBox.className = 'result';
+    resultBox.textContent = '';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideResult();
+    nameError.textContent = '';
+    phoneError.textContent = '';
+
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
+
+    let hasError = false;
+    if (!name) {
+      nameError.textContent = '이름을 입력해주세요.';
+      hasError = true;
+    }
+    if (phone.length !== 11) {
+      phoneError.textContent = '휴대폰 번호 11자리를 정확히 입력해주세요.';
+      hasError = true;
+    }
+    if (hasError) return;
+
+    if (API_URL.indexOf('PUT_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') !== -1) {
+      showResult('error', '관리자 설정이 완료되지 않았습니다. (API_URL 미설정)');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '확인 중...';
+
+    try {
+      const url = API_URL + '?name=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('bad response');
+      const data = await res.json();
+
+      if (data.found) {
+        showResult('success', '✅ 예매가 정상적으로 접수되었습니다.');
+      } else {
+        showResult('fail', '❌ 일치하는 예약 정보를 찾을 수 없습니다.\n이름과 번호를 다시 확인해주세요.');
+      }
+    } catch (err) {
+      showResult('error', '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '확인하기';
+    }
+  });
+</script>
+
+</body>
+</html>
