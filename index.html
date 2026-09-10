@@ -111,6 +111,7 @@
     border-radius: 10px;
     font-size: 14px;
     line-height: 1.6;
+    white-space: pre-line;
     text-align: center;
     display: none;
   }
@@ -206,7 +207,8 @@
       const data = await res.json();
 
       if (data.found) {
-        showResult('success', '✅ 예매가 정상적으로 접수되었습니다.');
+        var partyText = data.partySize ? ('\n관람 인원: ' + data.partySize + '명') : '';
+        showResult('success', '✅ 예매가 정상적으로 접수되었습니다.' + partyText);
       } else {
         showResult('fail', '❌ 일치하는 예약 정보를 찾을 수 없습니다.\n이름과 번호를 다시 확인해주세요.');
       }
